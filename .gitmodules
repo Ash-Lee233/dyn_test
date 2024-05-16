@@ -1,0 +1,3 @@
+[submodule "mindyolo"]
+	path = mindyolo
+	url = https://github.com/mindspore-lab/mindyolo.git
