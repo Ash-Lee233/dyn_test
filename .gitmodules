@@ -1,3 +1,6 @@
 [submodule "mindyolo"]
 	path = mindyolo
 	url = https://github.com/mindspore-lab/mindyolo.git
+[submodule "mindone"]
+	path = mindone
+	url = https://github.com/mindspore-lab/mindone.git
