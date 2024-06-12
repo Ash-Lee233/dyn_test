@@ -19,6 +19,7 @@ python run_pretrain.py
 import os
 import mindspore as ms
 import mindspore.communication.management as D
+import mindspore.train.amp
 from mindspore.communication.management import get_rank
 import mindspore.common.dtype as mstype
 from mindspore import context
@@ -46,8 +47,69 @@ from src.model_utils.config import config as cfg, bert_net_cfg
 from src.model_utils.moxing_adapter import moxing_wrapper
 from src.model_utils.device_adapter import get_device_id, get_device_num
 _current_dir = os.path.dirname(os.path.realpath(__file__))
+from mindspore.train.amp import AMP_BLACK_LIST, AMP_WHITE_LIST, _auto_black_list
+from mindspore import nn
+mindspore.train.amp.auto_mixed_precision()
+try:
+    from mindspore.train.amp import _auto_white_list
+    NEW_AUTO_WHITE = False
+except Exception:
+    # API changed since ms2.3-20240219
+    from mindspore.train.amp import _auto_mixed_precision_rewrite
+    NEW_AUTO_WHITE = True
 
+def auto_mixed_precision(network, amp_level="O0", dtype=ms.float16, custom_fp32_cells=[]):
+    """
+    network (Cell): Definition of the network.
+        amp_level (str): Supports ["O0", "O1", "O2", "O3"]. Default: ``"O0"`` .
 
+            - "O0": Do not change.
+            - "O1": Convert cells and operators in whitelist to lower precision operations, and keep full
+              precision operations for the rest.
+            - "O2": Keep full precision operations for cells and operators in blacklist, and convert the rest
+              to lower precision operations.
+            - "O3": Cast network to lower precision.
+
+        dtype (Type): ``mstype.float16`` or ``mstype.bfloat16`` ,
+            default: ``mstype.float16`` .
+
+    Raises:
+        ValueError: If `amp_level` is not within the supported range.
+
+    Examples:
+        >>> from mindspore import amp, nn
+        >>> network = LeNet5()
+        >>> amp_level = "O1"
+        >>> net = amp.auto_mixed_precision(network, amp_level)
+    """
+    if not isinstance(network, nn.Cell):
+        raise TypeError("The network type should be Cell.")
+
+    if amp_level == "O0":
+        pass
+    if amp_level == "O1":
+        if NEW_AUTO_WHITE:
+            return _auto_mixed_precision_rewrite(network, dtype, white_list=AMP_WHITE_LIST)
+        else:
+            return _auto_white_list(network, AMP_WHITE_LIST, dtype=dtype)
+    elif amp_level == "O2":
+        try:
+            _auto_black_list(
+                network,
+                AMP_BLACK_LIST + custom_fp32_cells,
+                dtype,
+            )
+        except Exception:
+            _auto_black_list(
+                network,
+                AMP_BLACK_LIST + custom_fp32_cells,
+            )
+    elif amp_level == "O3":
+        network.to_float(dtype)
+    else:
+        raise ValueError("The amp level {} is not supported".format(amp_level))
+
+    return network
 def _set_bert_all_reduce_split():
     """set bert all_reduce fusion split, support num_hidden_layers is 12 and 24."""
     device_target = context.get_context('device_target')
@@ -244,6 +306,8 @@ def run_pretrain():
     ds = create_bert_dataset(device_num, rank, cfg.do_shuffle, cfg.data_dir, cfg.schema_dir, cfg.batch_size,
                              cfg.bucket_list, cfg.dataset_format, cfg.num_samples)
     net_with_loss = BertNetworkWithLoss(bert_net_cfg, True)
+    # 自动混合精度
+    #net_with_loss = auto_mixed_precision(net_with_loss, amp_level="O0",dtype=ms.bfloat16)
 
     new_repeat_count = cfg.epoch_size * ds.get_dataset_size() // cfg.data_sink_steps
     if cfg.train_steps > 0:
