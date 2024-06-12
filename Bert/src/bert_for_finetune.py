@@ -27,6 +27,7 @@ from mindspore.common import dtype as mstype
 from .bert_for_pre_training import clip_grad
 from .finetune_eval_model import BertCLSModel, BertNERModel, BertSquadModel
 from .utils import CrossEntropyCalculation
+import mindspore.ops as ops
 
 GRADIENT_CLIP_TYPE = 1
 GRADIENT_CLIP_VALUE = 1.0
@@ -65,7 +66,7 @@ class BertFinetuneCell(nn.TrainOneStepWithLossScaleCell):
 
     def __init__(self, network, optimizer, scale_update_cell=None):
         super(BertFinetuneCell, self).__init__(network, optimizer, scale_update_cell)
-        self.cast = P.Cast()
+        self.cast = ops.cast
 
     def construct(self,
                   input_ids,
@@ -110,7 +111,7 @@ class BertSquadCell(nn.TrainOneStepWithLossScaleCell):
 
     def __init__(self, network, optimizer, scale_update_cell=None):
         super(BertSquadCell, self).__init__(network, optimizer, scale_update_cell)
-        self.cast = P.Cast()
+        self.cast = ops.cast
 
     def construct(self,
                   input_ids,

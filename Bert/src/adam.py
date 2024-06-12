@@ -21,6 +21,7 @@ from mindspore.ops import composite as C
 from mindspore.ops import functional as F
 from mindspore.common.tensor import Tensor
 from mindspore.nn.optim.optimizer import Optimizer
+import mindspore.ops as ops
 
 _adam_opt = C.MultitypeFuncGraph("adam_opt")
 _scaler_one = Tensor(1, mstype.int32)
@@ -68,7 +69,7 @@ def _update_run_op(beta1, beta2, eps, lr, overflow, weight_decay, param, m, v, g
         op_mul = P.Mul()
         op_square = P.Square()
         op_sqrt = P.Sqrt()
-        op_cast = P.Cast()
+        op_cast = ops.cast
         op_reshape = P.Reshape()
         op_shape = P.Shape()
         op_select = P.Select()
