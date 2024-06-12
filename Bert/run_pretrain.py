@@ -49,7 +49,6 @@ from src.model_utils.device_adapter import get_device_id, get_device_num
 _current_dir = os.path.dirname(os.path.realpath(__file__))
 from mindspore.train.amp import AMP_BLACK_LIST, AMP_WHITE_LIST, _auto_black_list
 from mindspore import nn
-mindspore.train.amp.auto_mixed_precision()
 try:
     from mindspore.train.amp import _auto_white_list
     NEW_AUTO_WHITE = False
