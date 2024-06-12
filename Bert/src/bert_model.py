@@ -223,12 +223,12 @@ class BertOutput(nn.Cell):
                  dropout_prob=0.1,
                  compute_type=mstype.float32):
         super(BertOutput, self).__init__()
-        self.dense = nn.extend.Dense(in_channels, out_channels,
+        self.dense = nn.extend.Linear(in_channels, out_channels,
                               weight_init=TruncatedNormal(initializer_range)).to_float(compute_type)
         self.dropout = nn.Dropout(p=dropout_prob)
         self.dropout_prob = dropout_prob
         self.add = ops.extend.add
-        self.layernorm = nn.LayerNorm((out_channels,)).to_float(compute_type)
+        self.layernorm = nn.extend.LayerNorm((out_channels,)).to_float(compute_type)
         self.cast = ops.cast
 
     def construct(self, hidden_status, input_tensor):
@@ -400,13 +400,13 @@ class BertAttention(nn.Cell):
         self.shape_to_2d = (-1, to_tensor_width)
         weight = TruncatedNormal(initializer_range)
         units = num_attention_heads * size_per_head
-        self.query_layer = nn.extend.Dense(from_tensor_width,
+        self.query_layer = nn.extend.Linear(from_tensor_width,
                                     units,
                                     weight_init=weight).to_float(compute_type)
-        self.key_layer = nn.extend.Dense(to_tensor_width,
+        self.key_layer = nn.extend.Linear(to_tensor_width,
                                   units,
                                   weight_init=weight).to_float(compute_type)
-        self.value_layer = nn.extend.Dense(to_tensor_width,
+        self.value_layer = nn.extend.Linear(to_tensor_width,
                                     units,
                                     weight_init=weight).to_float(compute_type)
 
@@ -627,7 +627,7 @@ class BertEncoderCell(nn.Cell):
             hidden_dropout_prob=hidden_dropout_prob,
             use_relative_positions=use_relative_positions,
             compute_type=compute_type)
-        self.intermediate = nn.extend.Dense(in_channels=hidden_size,
+        self.intermediate = nn.extend.Linear(in_channels=hidden_size,
                                      out_channels=intermediate_size,
                                      weight_init=TruncatedNormal(initializer_range)).to_float(compute_type)
         self.output = BertOutput(in_channels=intermediate_size,

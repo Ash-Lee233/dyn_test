@@ -86,7 +86,7 @@ def auto_mixed_precision(network, amp_level="O0", dtype=ms.float16, custom_fp32_
 
     if amp_level == "O0":
         pass
-    if amp_level == "O1":
+    elif amp_level == "O1":
         if NEW_AUTO_WHITE:
             return _auto_mixed_precision_rewrite(network, dtype, white_list=AMP_WHITE_LIST)
         else:
