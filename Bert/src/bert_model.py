@@ -168,7 +168,7 @@ class EmbeddingPostprocessor(nn.Cell):
         self.use_one_hot_embeddings = use_one_hot_embeddings
         self.max_position_embeddings = max_position_embeddings
         self.token_type_embedding = nn.extend.Embedding(
-            vocab_size=token_type_vocab_size,
+            num_embedding=token_type_vocab_size,
             embedding_size=embedding_size)
         self.shape_flat = (-1,)
         self.one_hot = ops.extend.one_hot
@@ -183,7 +183,7 @@ class EmbeddingPostprocessor(nn.Cell):
         self.slice = P.StridedSlice()
         _, seq, _ = self.shape
         self.full_position_embedding = nn.extend.Embedding(
-            vocab_size=max_position_embeddings,
+            num_embedding=max_position_embeddings,
             embedding_size=embedding_size)
         self.layernorm = nn.extend.LayerNorm((embedding_size,))
         self.position_ids = Tensor(np.arange(seq).reshape(-1, seq).astype(np.int32))
